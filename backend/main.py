@@ -80,11 +80,16 @@ async def upload_image(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
 
-    # Return URL - use proxy URL if S3_PUBLIC_URL starts with /api (internal network mode)
-    # Otherwise use direct S3 URL (legacy mode)
-    if S3_PUBLIC_URL.startswith("/api"):
+    # Return URL - use proxy URL if S3_PUBLIC_URL contains /api/images (proxy mode)
+    # Otherwise use direct S3 URL
+    if "/api/images" in S3_PUBLIC_URL:
+        # S3_PUBLIC_URL is the full proxy URL (e.g., https://backend.example.com/api/images)
+        public_url = f"{S3_PUBLIC_URL}/{filename}"
+    elif S3_PUBLIC_URL.startswith("/api"):
+        # Relative proxy URL (only works in dev with Vite proxy)
         public_url = f"/api/images/{filename}"
     else:
+        # Direct S3/MinIO access
         public_url = f"{S3_PUBLIC_URL}/{S3_BUCKET}/{filename}"
     return {"url": public_url, "filename": filename}
 
