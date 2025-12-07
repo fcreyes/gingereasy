@@ -18,7 +18,7 @@ A StreetEasy-style real estate application for gingerbread house listings. Built
 ```
 
 - **Frontend**: React + Vite (dev) / nginx (prod) - serves static files and proxies `/api/` to backend
-- **Backend**: FastAPI with uv package manager - handles API requests and proxies images from MinIO
+- **Backend**: FastAPI with Hypercorn (ASGI server) - handles API requests and proxies images from MinIO
 - **Database**: PostgreSQL - stores listing data
 - **Storage**: MinIO (S3-compatible) - stores uploaded images
 
@@ -51,7 +51,7 @@ Access the app at: **http://localhost:5174**
 ```bash
 cd backend
 uv sync
-uv run uvicorn main:app --reload --port 8000
+uv run hypercorn main:app --bind '[::]:8000' --reload
 ```
 
 **Frontend:**
@@ -190,25 +190,76 @@ error getting credentials - err: exit status 1, out: ``
 Error: Invalid value for '--port': '$PORT' is not a valid integer.
 ```
 
-**Cause:** Railway's `$PORT` variable isn't expanded when passed directly to uvicorn.
+**Cause:** Railway's `$PORT` variable isn't expanded when passed directly to the ASGI server.
 
 **Fix:** Wrap the command in a shell:
 ```json
 {
   "deploy": {
-    "startCommand": "sh -c 'uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}'"
+    "startCommand": "sh -c 'uv run hypercorn main:app --bind [::]:${PORT:-8000}'"
   }
 }
 ```
 
+### Railway Private Networking - nginx Proxy Hanging
+
+**Error:** Frontend requests to `/api/*` hang or return 499 status codes.
+
+**Cause:** Railway's private networking uses IPv6. nginx needs:
+1. The correct DNS resolver (`[fd12::10]`)
+2. Runtime DNS resolution (using variables in `proxy_pass`)
+
+**Fix:** Update `nginx.conf`:
+```nginx
+server {
+    # Railway's internal DNS resolver with short TTL
+    resolver [fd12::10] valid=10s;
+    resolver_timeout 5s;
+
+    location /api/ {
+        # Use variable to force runtime DNS resolution
+        set $backend "${BACKEND_URL}";
+        proxy_pass $backend$request_uri;
+        # ... other proxy settings
+    }
+}
+```
+
+**References:**
+- [Railway Private Networking Docs](https://docs.railway.com/guides/private-networking)
+- [nginx with private networking - Railway Help](https://help.railway.com/questions/nginx-with-private-networking-upstream-8d7ce3c3)
+
+### Railway Private Networking - Backend IPv6 Binding
+
+**Error:** Backend healthcheck fails or returns "Connection refused" when using `--host 0.0.0.0`.
+
+**Cause:** Railway's private networking uses IPv6. Uvicorn with `--host 0.0.0.0` only binds to IPv4, and uvicorn doesn't support dual-stack binding via CLI.
+
+**Fix:** Use Hypercorn instead of Uvicorn with `[::]:port` binding (provides dual-stack IPv4+IPv6 on Linux):
+```json
+{
+  "deploy": {
+    "startCommand": "sh -c 'uv run hypercorn main:app --bind [::]:${PORT:-8000}'"
+  }
+}
+```
+
+**References:**
+- [Hypercorn IPv6 Dual-Stack - GitHub Issue #85](https://github.com/pgjones/hypercorn/issues/85)
+- [Uvicorn Health Check Fails with IPv6 - Railway Help](https://station.railway.com/questions/uvicorn-health-check-fails-with-i-pv6-bin-6e9f929e)
+
 ## Tech Stack
 
-- **Frontend**: React 18, Vite, React Router
-- **Backend**: FastAPI, SQLAlchemy, Pydantic, boto3
+- **Frontend**: React 18, Vite, React Router, nginx (production)
+- **Backend**: FastAPI, Hypercorn (ASGI), SQLAlchemy, Pydantic, boto3
 - **Database**: PostgreSQL 15
 - **Storage**: MinIO (S3-compatible)
 - **Package Manager**: uv (Python), npm (Node.js)
 - **Deployment**: Railway, Docker
+
+### Why Hypercorn over Uvicorn?
+
+Railway's private networking uses IPv6. Uvicorn doesn't support dual-stack (IPv4+IPv6) binding via CLI, causing healthcheck failures. Hypercorn with `[::]:port` binds to both IPv4 and IPv6 on Linux, solving this issue.
 
 ## License
 
