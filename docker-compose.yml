@@ -1,4 +1,5 @@
 services:
+  # Database - internal network only
   db:
     image: postgres:15-alpine
     environment:
@@ -7,25 +8,27 @@ services:
       POSTGRES_DB: gingerbread
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
+    networks:
+      - internal
+    # No public ports - only accessible from internal network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gingerbread"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  # MinIO S3 - internal network only
   minio:
     image: minio/minio:latest
-    ports:
-      - "9002:9000"
-      - "9003:9001"
+    # No public ports - only accessible from internal network
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    networks:
+      - internal
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 5s
@@ -37,6 +40,8 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+    networks:
+      - internal
     entrypoint: >
       /bin/sh -c "
       mc alias set myminio http://minio:9000 minioadmin minioadmin123;
@@ -45,26 +50,31 @@ services:
       exit 0;
       "
 
+  # Backend API - internal network only
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
+    # No public ports - only accessible from internal network via frontend proxy
     environment:
       DATABASE_URL: postgresql://gingerbread:gingerbread123@db:5432/gingerbread
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: minioadmin
       S3_SECRET_KEY: minioadmin123
       S3_BUCKET: gingerbread
-      S3_PUBLIC_URL: http://localhost:9002
+      # Images served through frontend proxy
+      S3_PUBLIC_URL: /api/images
+      ALLOWED_ORIGINS: "*"
     depends_on:
       db:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+    networks:
+      - internal
     volumes:
       - ./backend:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
+  # Frontend - the ONLY public service
   frontend:
     build: ./frontend
     ports:
@@ -73,9 +83,21 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:8000
+      # Backend URL for Vite proxy (internal network)
+      - BACKEND_URL=http://backend:8000
     depends_on:
       - backend
+    networks:
+      - internal
+      - public
+
+networks:
+  # Internal network - not accessible from host
+  internal:
+    internal: true
+  # Public network - accessible from host
+  public:
+    driver: bridge
 
 volumes:
   postgres_data:

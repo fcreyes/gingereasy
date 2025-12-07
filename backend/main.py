@@ -3,10 +3,12 @@ import uuid
 import boto3
 from botocore.client import Config
 from fastapi import FastAPI, Depends, HTTPException, Query, UploadFile, File
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List, Optional
+import io
 
 from database import engine, get_db, Base
 from models import Listing
@@ -78,9 +80,34 @@ async def upload_image(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
 
-    # Return the public URL
-    public_url = f"{S3_PUBLIC_URL}/{S3_BUCKET}/{filename}"
+    # Return URL - use proxy URL if S3_PUBLIC_URL starts with /api (internal network mode)
+    # Otherwise use direct S3 URL (legacy mode)
+    if S3_PUBLIC_URL.startswith("/api"):
+        public_url = f"/api/images/{filename}"
+    else:
+        public_url = f"{S3_PUBLIC_URL}/{S3_BUCKET}/{filename}"
     return {"url": public_url, "filename": filename}
+
+
+@app.get("/api/images/{filename}")
+async def get_image(filename: str):
+    """Proxy images from S3/MinIO - used when MinIO is not publicly accessible"""
+    try:
+        response = s3_client.get_object(Bucket=S3_BUCKET, Key=filename)
+        content = response["Body"].read()
+        content_type = response.get("ContentType", "image/jpeg")
+
+        return StreamingResponse(
+            io.BytesIO(content),
+            media_type=content_type,
+            headers={
+                "Cache-Control": "public, max-age=31536000",  # Cache for 1 year
+            }
+        )
+    except s3_client.exceptions.NoSuchKey:
+        raise HTTPException(status_code=404, detail="Image not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve image: {str(e)}")
 
 
 @app.get("/api/listings", response_model=List[ListingResponse])

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import ListingCard from '../components/ListingCard'
 import SearchFilters from '../components/SearchFilters'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || ''
 
 function HomePage() {
   const [listings, setListings] = useState([])
