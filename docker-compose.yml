@@ -72,7 +72,7 @@ services:
       - internal
     volumes:
       - ./backend:/app
-    command: uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uv run hypercorn main:app --bind '[::]:8000' --reload
 
   # Frontend - the ONLY public service
   frontend:
