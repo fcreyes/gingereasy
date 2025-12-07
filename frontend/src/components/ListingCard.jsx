@@ -39,15 +39,24 @@ function ListingCard({ listing }) {
         <div className="listing-price">{formatPrice(listing.price)}</div>
         <div className="listing-address">{listing.address}</div>
         <div className="listing-neighborhood">{listing.neighborhood}</div>
-        <div className="listing-details">
+        <div className="listing-stats">
           {listing.num_rooms && (
-            <span className="listing-detail">{listing.num_rooms} rooms</span>
+            <span className="listing-stat">
+              <span className="stat-icon">🚪</span>
+              <span className="stat-text">{listing.num_rooms} rooms</span>
+            </span>
           )}
           {listing.square_feet && (
-            <span className="listing-detail">{listing.square_feet.toLocaleString()} sq ft</span>
+            <span className="listing-stat">
+              <span className="stat-icon">📐</span>
+              <span className="stat-text">{listing.square_feet.toLocaleString()} sq ft</span>
+            </span>
           )}
           {listing.num_candy_canes && (
-            <span className="listing-detail">{listing.num_candy_canes} candy canes</span>
+            <span className="listing-stat">
+              <span className="stat-icon">🍬</span>
+              <span className="stat-text">{listing.num_candy_canes} candy canes</span>
+            </span>
           )}
         </div>
       </div>

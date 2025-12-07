@@ -119,24 +119,28 @@ function ListingDetail() {
           <div className="detail-stats">
             {listing.square_feet && (
               <div className="stat">
+                <div className="stat-icon">📐</div>
                 <div className="stat-value">{listing.square_feet.toLocaleString()}</div>
                 <div className="stat-label">Sq Ft</div>
               </div>
             )}
             {listing.num_rooms && (
               <div className="stat">
+                <div className="stat-icon">🚪</div>
                 <div className="stat-value">{listing.num_rooms}</div>
                 <div className="stat-label">Rooms</div>
               </div>
             )}
             {listing.num_candy_canes && (
               <div className="stat">
+                <div className="stat-icon">🍬</div>
                 <div className="stat-value">{listing.num_candy_canes}</div>
                 <div className="stat-label">Candy Canes</div>
               </div>
             )}
             {listing.frosting_type && (
               <div className="stat">
+                <div className="stat-icon">🧁</div>
                 <div className="stat-value" style={{ fontSize: '1rem' }}>{listing.frosting_type}</div>
                 <div className="stat-label">Frosting</div>
               </div>
