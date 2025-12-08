@@ -45,14 +45,14 @@ class Listing(Base):
     description: Mapped[str | None] = mapped_column(Text)
     price: Mapped[float] = mapped_column(Float, nullable=False)
     address: Mapped[str] = mapped_column(String(255), nullable=False)
-    neighborhood: Mapped[str | None] = mapped_column(String(100))
+    neighborhood: Mapped[str | None] = mapped_column(String(200))
 
     # Gingerbread house specific fields
     square_feet: Mapped[int | None] = mapped_column(Integer)
     num_rooms: Mapped[int | None] = mapped_column(Integer)
     num_candy_canes: Mapped[int | None] = mapped_column(Integer)
     has_gumdrop_garden: Mapped[int] = mapped_column(Integer, default=0)
-    frosting_type: Mapped[str | None] = mapped_column(String(100))
+    frosting_type: Mapped[str | None] = mapped_column(String(500))
 
     listing_type: Mapped[str] = mapped_column(String(50), default=ListingType.COTTAGE.value)
     status: Mapped[str] = mapped_column(String(50), default=ListingStatus.AVAILABLE.value)

@@ -153,6 +153,7 @@ function CreateListing() {
             value={formData.title}
             onChange={handleChange}
             placeholder="e.g., Cozy Peppermint Cottage"
+            maxLength={255}
             required
           />
         </div>
@@ -201,6 +202,7 @@ function CreateListing() {
               value={formData.address}
               onChange={handleChange}
               placeholder="e.g., 123 Candy Lane"
+              maxLength={255}
               required
             />
           </div>
@@ -213,6 +215,7 @@ function CreateListing() {
               value={formData.neighborhood}
               onChange={handleChange}
               placeholder="e.g., Sugar Plum Village"
+              maxLength={200}
             />
           </div>
         </div>
@@ -261,6 +264,7 @@ function CreateListing() {
               value={formData.frosting_type}
               onChange={handleChange}
               placeholder="e.g., Royal Icing"
+              maxLength={500}
             />
           </div>
 
