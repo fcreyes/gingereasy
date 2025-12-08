@@ -146,7 +146,9 @@ function CreateListing() {
         </div>
 
         <div className="form-group">
-          <label>Title *</label>
+          <label>
+            Title * <span className="char-count">({formData.title.length}/255)</span>
+          </label>
           <input
             type="text"
             name="title"
@@ -195,7 +197,9 @@ function CreateListing() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>Address *</label>
+            <label>
+              Address * <span className="char-count">({formData.address.length}/255)</span>
+            </label>
             <input
               type="text"
               name="address"
@@ -208,7 +212,9 @@ function CreateListing() {
           </div>
 
           <div className="form-group">
-            <label>Neighborhood</label>
+            <label>
+              Neighborhood <span className="char-count">({formData.neighborhood.length}/200)</span>
+            </label>
             <input
               type="text"
               name="neighborhood"
@@ -257,7 +263,10 @@ function CreateListing() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>Frosting Type</label>
+            <label>
+              Frosting Type{' '}
+              <span className="char-count">({formData.frosting_type.length}/500)</span>
+            </label>
             <input
               type="text"
               name="frosting_type"
