@@ -91,9 +91,7 @@ function CreateListing() {
         num_candy_canes: formData.num_candy_canes ? parseInt(formData.num_candy_canes) : null,
       }
 
-      const url = isEditing
-        ? `${API_URL}/api/listings/${id}`
-        : `${API_URL}/api/listings`
+      const url = isEditing ? `${API_URL}/api/listings/${id}` : `${API_URL}/api/listings`
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -128,7 +126,15 @@ function CreateListing() {
       <h1>{isEditing ? 'Edit Listing' : 'List Your Gingerbread House'}</h1>
 
       {error && (
-        <div style={{ padding: '1rem', background: '#fee', color: '#c00', borderRadius: '8px', marginBottom: '1rem' }}>
+        <div
+          style={{
+            padding: '1rem',
+            background: '#fee',
+            color: '#c00',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+          }}
+        >
           {error}
         </div>
       )}

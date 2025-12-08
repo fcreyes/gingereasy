@@ -1,4 +1,8 @@
-.PHONY: help dev dev-build dev-up dev-down dev-logs prod prod-build prod-up prod-down prod-logs clean ps
+.PHONY: help dev dev-build dev-up dev-down dev-logs prod prod-build prod-up prod-down prod-logs clean ps lint lint-backend lint-frontend
+
+# Export UID/GID for docker-compose to run as current user
+export UID := $(shell id -u)
+export GID := $(shell id -g)
 
 # Default target
 help:
@@ -17,6 +21,11 @@ help:
 	@echo "  make prod-up      - Start prod containers"
 	@echo "  make prod-down    - Stop prod containers"
 	@echo "  make prod-logs    - Tail prod logs"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "  make lint         - Run all linters"
+	@echo "  make lint-backend - Run backend linters (ruff, mypy)"
+	@echo "  make lint-frontend- Run frontend linters (eslint, prettier)"
 	@echo ""
 	@echo "Utility:"
 	@echo "  make ps           - Show running containers"
@@ -60,3 +69,19 @@ ps:
 clean:
 	docker-compose down -v 2>/dev/null || true
 	docker-compose -f docker-compose.prod.yml down -v 2>/dev/null || true
+
+# Code quality targets (run in containers to avoid permission issues)
+lint: lint-backend lint-frontend
+
+lint-backend:
+	docker-compose run --rm -T --no-deps backend sh -c "uv sync --dev && uv run ruff check . && uv run ruff format --check . && uv run mypy . --ignore-missing-imports"
+
+lint-frontend:
+	docker-compose run --rm -T --no-deps frontend sh -c "npm ci && npm run lint && npm run format:check && npm run typecheck"
+
+# Local lint targets (requires local uv/npm - may have permission issues with Docker volumes)
+lint-local-backend:
+	cd backend && uv sync --dev && uv run ruff check . && uv run ruff format --check . && uv run mypy . --ignore-missing-imports
+
+lint-local-frontend:
+	cd frontend && npm ci && npm run lint && npm run format:check && npm run typecheck

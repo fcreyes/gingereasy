@@ -82,11 +82,7 @@ function HomePage() {
         </div>
       </section>
 
-      <SearchFilters
-        filters={filters}
-        setFilters={setFilters}
-        neighborhoods={neighborhoods}
-      />
+      <SearchFilters filters={filters} setFilters={setFilters} neighborhoods={neighborhoods} />
 
       <main className="main-content">
         <div className="results-header">

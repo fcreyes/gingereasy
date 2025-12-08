@@ -21,8 +21,8 @@ export function AuthProvider({ children }) {
     try {
       const response = await fetch(`${API_URL}/api/auth/me`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       if (response.ok) {
         const userData = await response.json()
@@ -88,22 +88,24 @@ export function AuthProvider({ children }) {
 
   const getAuthHeaders = () => {
     if (token) {
-      return { 'Authorization': `Bearer ${token}` }
+      return { Authorization: `Bearer ${token}` }
     }
     return {}
   }
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      loading,
-      login,
-      register,
-      logout,
-      getAuthHeaders,
-      isAuthenticated: !!user
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        register,
+        logout,
+        getAuthHeaders,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

@@ -83,7 +83,11 @@ function ListingDetail() {
         <div className="empty-state">
           <h3>Listing not found</h3>
           <p>This gingerbread house may have been demolished or eaten.</p>
-          <Link to="/" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-block' }}>
+          <Link
+            to="/"
+            className="btn btn-primary"
+            style={{ marginTop: '1rem', display: 'inline-block' }}
+          >
             Back to listings
           </Link>
         </div>
@@ -101,7 +105,9 @@ function ListingDetail() {
         <div>
           <div style={{ position: 'relative' }}>
             <img
-              src={listing.image_url || 'https://via.placeholder.com/800x500?text=Gingerbread+House'}
+              src={
+                listing.image_url || 'https://via.placeholder.com/800x500?text=Gingerbread+House'
+              }
               alt={listing.title}
               className="detail-image"
             />
@@ -150,7 +156,9 @@ function ListingDetail() {
             {listing.frosting_type && (
               <div className="stat">
                 <div className="stat-icon">🧁</div>
-                <div className="stat-value" style={{ fontSize: '1rem' }}>{listing.frosting_type}</div>
+                <div className="stat-value" style={{ fontSize: '1rem' }}>
+                  {listing.frosting_type}
+                </div>
                 <div className="stat-label">Frosting</div>
               </div>
             )}
@@ -159,27 +167,31 @@ function ListingDetail() {
           <div className="detail-features">
             <h3>Features</h3>
             <div className="features-list">
-              {listing.has_gumdrop_garden && (
-                <div className="feature-item">Gumdrop Garden</div>
-              )}
+              {listing.has_gumdrop_garden && <div className="feature-item">Gumdrop Garden</div>}
               {listing.frosting_type && (
                 <div className="feature-item">{listing.frosting_type} Frosting</div>
               )}
               {listing.num_candy_canes > 50 && (
                 <div className="feature-item">Extensive Candy Cane Decor</div>
               )}
-              {listing.square_feet > 2000 && (
-                <div className="feature-item">Spacious Interior</div>
-              )}
+              {listing.square_feet > 2000 && <div className="feature-item">Spacious Interior</div>}
             </div>
           </div>
 
           {isOwner && (
             <div className="form-actions" style={{ marginTop: '2rem' }}>
-              <Link to={`/edit/${listing.id}`} className="btn btn-secondary" style={{ flex: 1, textAlign: 'center' }}>
+              <Link
+                to={`/edit/${listing.id}`}
+                className="btn btn-secondary"
+                style={{ flex: 1, textAlign: 'center' }}
+              >
                 Edit Listing
               </Link>
-              <button onClick={handleDelete} className="btn btn-secondary" style={{ flex: 1, background: '#fee', color: '#c00' }}>
+              <button
+                onClick={handleDelete}
+                className="btn btn-secondary"
+                style={{ flex: 1, background: '#fee', color: '#c00' }}
+              >
                 Delete
               </button>
             </div>

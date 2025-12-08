@@ -53,6 +53,7 @@ services:
   # Backend API - internal network only
   backend:
     build: ./backend
+    user: "${UID:-1000}:${GID:-1000}"
     # No public ports - only accessible from internal network via frontend proxy
     environment:
       DATABASE_URL: postgresql://gingerbread:gingerbread123@db:5432/gingerbread
@@ -77,6 +78,7 @@ services:
   # Frontend - the ONLY public service
   frontend:
     build: ./frontend
+    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "5174:5173"
     volumes:

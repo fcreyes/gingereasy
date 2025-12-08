@@ -1,6 +1,5 @@
 import os
 from datetime import datetime, timedelta
-from typing import Optional
 
 import bcrypt
 from fastapi import Depends, HTTPException, status
@@ -21,20 +20,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=Fals
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(
-        plain_password.encode('utf-8'),
-        hashed_password.encode('utf-8')
-    )
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def get_password_hash(password: str) -> str:
-    return bcrypt.hashpw(
-        password.encode('utf-8'),
-        bcrypt.gensalt()
-    ).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -45,15 +38,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-def get_user_by_email(db: Session, email: str) -> Optional[User]:
+def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email).first()
 
 
-def get_user_by_username(db: Session, username: str) -> Optional[User]:
+def get_user_by_username(db: Session, username: str) -> User | None:
     return db.query(User).filter(User.username == username).first()
 
 
-def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
+def authenticate_user(db: Session, username: str, password: str) -> User | None:
     # Allow login with either username or email
     user = get_user_by_username(db, username)
     if not user:
@@ -66,9 +59,8 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional[Use
 
 
 async def get_current_user(
-    token: Optional[str] = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-) -> Optional[User]:
+    token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)
+) -> User | None:
     """Returns the current user or None if not authenticated"""
     if token is None:
         return None
@@ -88,9 +80,7 @@ async def get_current_user(
     return user
 
 
-async def get_current_user_required(
-    current_user: Optional[User] = Depends(get_current_user)
-) -> User:
+async def get_current_user_required(current_user: User | None = Depends(get_current_user)) -> User:
     """Requires authentication - raises 401 if not authenticated"""
     if current_user is None:
         raise HTTPException(

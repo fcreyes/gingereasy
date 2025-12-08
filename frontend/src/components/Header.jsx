@@ -16,12 +16,16 @@ function Header() {
             <>
               <Link to="/create">List Your House</Link>
               <span className="nav-user">Hi, {user.username}</span>
-              <button onClick={logout} className="nav-logout">Logout</button>
+              <button onClick={logout} className="nav-logout">
+                Logout
+              </button>
             </>
           ) : (
             <>
               <Link to="/login">Sign In</Link>
-              <Link to="/register" className="btn btn-primary btn-small">Get Started</Link>
+              <Link to="/register" className="btn btn-primary btn-small">
+                Get Started
+              </Link>
             </>
           )}
         </nav>

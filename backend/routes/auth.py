@@ -2,17 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from database import get_db
-from models import User
-from schemas import UserCreate, UserResponse, Token
 from auth import (
-    get_password_hash,
     authenticate_user,
     create_access_token,
+    get_current_user_required,
+    get_password_hash,
     get_user_by_email,
     get_user_by_username,
-    get_current_user_required,
 )
+from database import get_db
+from models import User
+from schemas import Token, UserCreate, UserResponse
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -22,22 +22,19 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     # Check if email already exists
     if get_user_by_email(db, user.email):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
 
     # Check if username already exists
     if get_user_by_username(db, user.username):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already taken"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken"
         )
 
     # Validate password strength (basic validation)
     if len(user.password) < 8:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must be at least 8 characters"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters"
         )
 
     # Create user
@@ -55,10 +52,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
