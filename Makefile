@@ -1,4 +1,4 @@
-.PHONY: help dev dev-build dev-up dev-down dev-logs prod prod-build prod-up prod-down prod-logs clean ps lint lint-backend lint-frontend
+.PHONY: help dev dev-build dev-up dev-down dev-logs prod prod-build prod-up prod-down prod-logs clean ps lint lint-backend lint-frontend setup-hooks
 
 # Export UID/GID for docker-compose to run as current user
 export UID := $(shell id -u)
@@ -26,6 +26,9 @@ help:
 	@echo "  make lint         - Run all linters"
 	@echo "  make lint-backend - Run backend linters (ruff, mypy)"
 	@echo "  make lint-frontend- Run frontend linters (eslint, prettier)"
+	@echo ""
+	@echo "Setup:"
+	@echo "  make setup-hooks  - Install git pre-commit hooks"
 	@echo ""
 	@echo "Utility:"
 	@echo "  make ps           - Show running containers"
@@ -85,3 +88,10 @@ lint-local-backend:
 
 lint-local-frontend:
 	cd frontend && npm ci && npm run lint && npm run format:check && npm run typecheck
+
+# Setup targets
+setup-hooks:
+	@echo "Installing pre-commit hook..."
+	@cp scripts/pre-commit .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit
+	@echo "Pre-commit hook installed! It will run on every commit."
