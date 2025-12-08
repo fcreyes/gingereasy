@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
 
 function ListingDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user, getAuthHeaders } = useAuth()
   const [listing, setListing] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Check if current user is the owner
+  const isOwner = user && listing?.owner_id === user.id
 
   useEffect(() => {
     fetchListing()
@@ -34,9 +39,13 @@ function ListingDetail() {
     try {
       const response = await fetch(`${API_URL}/api/listings/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       })
       if (response.ok) {
         navigate('/')
+      } else {
+        const error = await response.json()
+        alert(error.detail || 'Failed to delete listing')
       }
     } catch (error) {
       console.error('Error deleting listing:', error)
@@ -165,14 +174,16 @@ function ListingDetail() {
             </div>
           </div>
 
-          <div className="form-actions" style={{ marginTop: '2rem' }}>
-            <Link to={`/edit/${listing.id}`} className="btn btn-secondary" style={{ flex: 1, textAlign: 'center' }}>
-              Edit Listing
-            </Link>
-            <button onClick={handleDelete} className="btn btn-secondary" style={{ flex: 1, background: '#fee', color: '#c00' }}>
-              Delete
-            </button>
-          </div>
+          {isOwner && (
+            <div className="form-actions" style={{ marginTop: '2rem' }}>
+              <Link to={`/edit/${listing.id}`} className="btn btn-secondary" style={{ flex: 1, textAlign: 'center' }}>
+                Edit Listing
+              </Link>
+              <button onClick={handleDelete} className="btn btn-secondary" style={{ flex: 1, background: '#fee', color: '#c00' }}>
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

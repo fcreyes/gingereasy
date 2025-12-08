@@ -1,7 +1,22 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Enum
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Enum, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
 from database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    is_active = Column(Integer, default=1)  # boolean as int for consistency
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationship to listings
+    listings = relationship("Listing", back_populates="owner")
 
 
 class ListingStatus(str, enum.Enum):
@@ -39,6 +54,10 @@ class Listing(Base):
     status = Column(String(50), default=ListingStatus.AVAILABLE.value)
 
     image_url = Column(String(500))
+
+    # Owner relationship
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner = relationship("User", back_populates="listings")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

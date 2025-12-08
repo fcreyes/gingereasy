@@ -69,6 +69,14 @@ input, select {
   color: #8B4513;
 }
 
+.nav-links .btn-primary {
+  color: white;
+}
+
+.nav-links .btn-primary:hover {
+  color: white;
+}
+
 .btn {
   padding: 0.625rem 1.25rem;
   border-radius: 6px;
@@ -791,4 +799,93 @@ input, select {
   .listing-details {
     font-size: 0.75rem;
   }
+}
+
+/* Auth Pages */
+.auth-page {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8f5f2 0%, #fff 100%);
+}
+
+.auth-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card h1 {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.auth-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.auth-error {
+  background: #fee;
+  color: #c00;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.auth-footer a {
+  color: #8B4513;
+  font-weight: 500;
+}
+
+.btn-full {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Header auth styles */
+.nav-user {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.nav-logout {
+  background: none;
+  border: none;
+  color: #8B4513;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.nav-logout:hover {
+  text-decoration: underline;
+}
+
+/* Loading container */
+.loading-container {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

@@ -1,0 +1,13 @@
+:{$PORT}
+
+# API reverse proxy - Caddy resolves DNS per-request by default
+handle /api/* {
+	reverse_proxy {$BACKEND_URL}
+}
+
+# Serve static files with SPA fallback
+handle {
+	root * /srv
+	try_files {path} /index.html
+	file_server
+}

@@ -58,6 +58,36 @@ class ListingResponse(ListingBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    owner_id: Optional[int] = None
 
     class Config:
         from_attributes = True
+
+
+# User schemas
+class UserBase(BaseModel):
+    email: str
+    username: str
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserResponse(UserBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Token schemas
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: Optional[str] = None

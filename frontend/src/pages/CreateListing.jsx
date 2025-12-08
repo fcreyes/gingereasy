@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import ImageUpload from '../components/ImageUpload'
+import { useAuth } from '../context/AuthContext'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
 
@@ -8,6 +9,7 @@ function CreateListing() {
   const navigate = useNavigate()
   const { id } = useParams()
   const isEditing = Boolean(id)
+  const { getAuthHeaders } = useAuth()
 
   const [formData, setFormData] = useState({
     title: '',
@@ -97,6 +99,7 @@ function CreateListing() {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
       })

@@ -15,23 +15,20 @@ COPY . .
 # Build the app (no VITE_API_URL needed - using relative URLs with proxy)
 RUN npm run build
 
-# Production stage with nginx
-FROM nginx:alpine
+# Production stage with Caddy
+FROM caddy:2-alpine
 
-# Copy built assets from builder and fix permissions
-COPY --from=builder /app/dist /usr/share/nginx/html
-RUN chmod -R 755 /usr/share/nginx/html
+# Copy built assets from builder
+COPY --from=builder /app/dist /srv
 
-# Copy nginx config template
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Copy Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
 
 # Railway provides PORT env var, default to 3000
 ENV PORT=3000
 # Backend URL for reverse proxy (internal network)
 ENV BACKEND_URL=http://backend:8000
 
-# nginx alpine image uses envsubst automatically for templates
-# The template will be processed and copied to /etc/nginx/conf.d/default.conf
 EXPOSE ${PORT}
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

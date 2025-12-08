@@ -1,0 +1,99 @@
+# Production-like local setup that mirrors Railway deployment
+# Usage: docker-compose -f docker-compose.prod.yml up --build
+
+services:
+  # Database - internal network only
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: gingerbread
+      POSTGRES_PASSWORD: gingerbread123
+      POSTGRES_DB: gingerbread
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gingerbread"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # MinIO S3 - internal network only
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - internal
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 minioadmin minioadmin123;
+      mc mb myminio/gingerbread --ignore-existing;
+      mc anonymous set public myminio/gingerbread;
+      exit 0;
+      "
+
+  # Backend API - production build, internal network only
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://gingerbread:gingerbread123@db:5432/gingerbread
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_BUCKET: gingerbread
+      S3_PUBLIC_URL: /api/images
+      ALLOWED_ORIGINS: "*"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    networks:
+      - internal
+    # Production-like: no volume mounts, use built image
+    command: uv run hypercorn main:app --bind '[::]:8000'
+
+  # Frontend - production build with Caddy (mirrors Railway)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      BACKEND_URL: "http://backend:8000"
+    depends_on:
+      - backend
+    networks:
+      - internal
+      - public
+
+networks:
+  internal:
+    internal: true
+  public:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:

@@ -11,8 +11,10 @@ from typing import List, Optional
 import io
 
 from database import engine, get_db, Base
-from models import Listing
+from models import Listing, User
 from schemas import ListingCreate, ListingUpdate, ListingResponse, ListingStatus, ListingType
+from auth import get_current_user_required
+from routes.auth import router as auth_router
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -44,6 +46,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include auth router
+app.include_router(auth_router)
 
 
 @app.get("/")
@@ -175,7 +180,11 @@ def get_listing(listing_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/api/listings", response_model=ListingResponse)
-def create_listing(listing: ListingCreate, db: Session = Depends(get_db)):
+def create_listing(
+    listing: ListingCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_required)
+):
     db_listing = Listing(
         title=listing.title,
         description=listing.description,
@@ -190,6 +199,7 @@ def create_listing(listing: ListingCreate, db: Session = Depends(get_db)):
         listing_type=listing.listing_type.value if listing.listing_type else "cottage",
         status=listing.status.value if listing.status else "available",
         image_url=listing.image_url,
+        owner_id=current_user.id,
     )
     db.add(db_listing)
     db.commit()
@@ -199,10 +209,19 @@ def create_listing(listing: ListingCreate, db: Session = Depends(get_db)):
 
 
 @app.put("/api/listings/{listing_id}", response_model=ListingResponse)
-def update_listing(listing_id: int, listing: ListingUpdate, db: Session = Depends(get_db)):
+def update_listing(
+    listing_id: int,
+    listing: ListingUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_required)
+):
     db_listing = db.query(Listing).filter(Listing.id == listing_id).first()
     if not db_listing:
         raise HTTPException(status_code=404, detail="Listing not found")
+
+    # Check ownership (allow if no owner or if current user is owner)
+    if db_listing.owner_id and db_listing.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this listing")
 
     update_data = listing.model_dump(exclude_unset=True)
 
@@ -225,10 +244,18 @@ def update_listing(listing_id: int, listing: ListingUpdate, db: Session = Depend
 
 
 @app.delete("/api/listings/{listing_id}")
-def delete_listing(listing_id: int, db: Session = Depends(get_db)):
+def delete_listing(
+    listing_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_required)
+):
     db_listing = db.query(Listing).filter(Listing.id == listing_id).first()
     if not db_listing:
         raise HTTPException(status_code=404, detail="Listing not found")
+
+    # Check ownership (allow if no owner or if current user is owner)
+    if db_listing.owner_id and db_listing.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this listing")
 
     db.delete(db_listing)
     db.commit()
