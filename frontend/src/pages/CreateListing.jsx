@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import ImageUpload from '../components/ImageUpload'
+import { useAuth } from '../context/AuthContext'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
 
@@ -8,6 +9,7 @@ function CreateListing() {
   const navigate = useNavigate()
   const { id } = useParams()
   const isEditing = Boolean(id)
+  const { getAuthHeaders } = useAuth()
 
   const [formData, setFormData] = useState({
     title: '',
@@ -89,14 +91,13 @@ function CreateListing() {
         num_candy_canes: formData.num_candy_canes ? parseInt(formData.num_candy_canes) : null,
       }
 
-      const url = isEditing
-        ? `${API_URL}/api/listings/${id}`
-        : `${API_URL}/api/listings`
+      const url = isEditing ? `${API_URL}/api/listings/${id}` : `${API_URL}/api/listings`
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
       })
@@ -125,7 +126,15 @@ function CreateListing() {
       <h1>{isEditing ? 'Edit Listing' : 'List Your Gingerbread House'}</h1>
 
       {error && (
-        <div style={{ padding: '1rem', background: '#fee', color: '#c00', borderRadius: '8px', marginBottom: '1rem' }}>
+        <div
+          style={{
+            padding: '1rem',
+            background: '#fee',
+            color: '#c00',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+          }}
+        >
           {error}
         </div>
       )}
@@ -144,6 +153,7 @@ function CreateListing() {
             value={formData.title}
             onChange={handleChange}
             placeholder="e.g., Cozy Peppermint Cottage"
+            maxLength={255}
             required
           />
         </div>
@@ -192,6 +202,7 @@ function CreateListing() {
               value={formData.address}
               onChange={handleChange}
               placeholder="e.g., 123 Candy Lane"
+              maxLength={255}
               required
             />
           </div>
@@ -204,6 +215,7 @@ function CreateListing() {
               value={formData.neighborhood}
               onChange={handleChange}
               placeholder="e.g., Sugar Plum Village"
+              maxLength={200}
             />
           </div>
         </div>
@@ -252,6 +264,7 @@ function CreateListing() {
               value={formData.frosting_type}
               onChange={handleChange}
               placeholder="e.g., Royal Icing"
+              maxLength={500}
             />
           </div>
 

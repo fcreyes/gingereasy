@@ -30,9 +30,7 @@ function ListingCard({ listing }) {
           alt={listing.title}
           className="listing-image"
         />
-        <span className={`listing-status ${getStatusClass(listing.status)}`}>
-          {listing.status}
-        </span>
+        <span className={`listing-status ${getStatusClass(listing.status)}`}>{listing.status}</span>
       </div>
       <div className="listing-content">
         <span className="listing-type-badge">{listing.listing_type}</span>

@@ -1,0 +1,35 @@
+#!/bin/bash
+set -e
+
+echo "Running pre-commit checks..."
+
+# Get the repo root
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Backend checks
+echo "=== Backend ==="
+cd "$REPO_ROOT/backend"
+
+echo "Checking ruff lint..."
+uv run ruff check .
+
+echo "Checking ruff format..."
+uv run ruff format --check .
+
+echo "Checking mypy..."
+uv run mypy . --ignore-missing-imports
+
+# Frontend checks
+echo "=== Frontend ==="
+cd "$REPO_ROOT/frontend"
+
+echo "Checking eslint..."
+npm run lint 2>&1 | tail -5
+
+echo "Checking prettier..."
+npm run format:check
+
+echo "Checking typescript..."
+npm run typecheck
+
+echo "=== All checks passed! ==="

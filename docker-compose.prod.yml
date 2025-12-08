@@ -1,3 +1,6 @@
+# Production-like local setup that mirrors Railway deployment
+# Usage: docker-compose -f docker-compose.prod.yml up --build
+
 services:
   # Database - internal network only
   db:
@@ -10,7 +13,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - internal
-    # No public ports - only accessible from internal network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gingerbread"]
       interval: 5s
@@ -20,7 +22,6 @@ services:
   # MinIO S3 - internal network only
   minio:
     image: minio/minio:latest
-    # No public ports - only accessible from internal network
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
@@ -50,19 +51,15 @@ services:
       exit 0;
       "
 
-  # Backend API - internal network only
+  # Backend API - production build, internal network only
   backend:
     build: ./backend
-    user: "${UID:-1000}:${GID:-1000}"
-    # No public ports - only accessible from internal network via frontend proxy
     environment:
-      UV_CACHE_DIR: /tmp/uv-cache
       DATABASE_URL: postgresql://gingerbread:gingerbread123@db:5432/gingerbread
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: minioadmin
       S3_SECRET_KEY: minioadmin123
       S3_BUCKET: gingerbread
-      # Images served through frontend proxy
       S3_PUBLIC_URL: /api/images
       ALLOWED_ORIGINS: "*"
     depends_on:
@@ -72,23 +69,19 @@ services:
         condition: service_completed_successfully
     networks:
       - internal
-      - public  # For pip/uv access during development
-    volumes:
-      - ./backend:/app
-    command: uv run hypercorn main:app --bind '[::]:8000' --reload
+    # Production-like: no volume mounts, use built image
+    command: uv run hypercorn main:app --bind '[::]:8000'
 
-  # Frontend - the ONLY public service
+  # Frontend - production build with Caddy (mirrors Railway)
   frontend:
-    build: ./frontend
-    user: "${UID:-1000}:${GID:-1000}"
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
     ports:
-      - "5174:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "3000:3000"
     environment:
-      # Backend URL for Vite proxy (internal network)
-      - BACKEND_URL=http://backend:8000
+      PORT: "3000"
+      BACKEND_URL: "http://backend:8000"
     depends_on:
       - backend
     networks:
@@ -96,10 +89,8 @@ services:
       - public
 
 networks:
-  # Internal network - not accessible from host
   internal:
     internal: true
-  # Public network - accessible from host
   public:
     driver: bridge
 
