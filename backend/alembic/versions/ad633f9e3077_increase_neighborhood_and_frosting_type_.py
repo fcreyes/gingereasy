@@ -40,16 +40,35 @@ def upgrade() -> None:
     )
 
     # Update NULL values to defaults before adding NOT NULL constraints
-    op.execute("UPDATE listings SET has_gumdrop_garden = 0 WHERE has_gumdrop_garden IS NULL")
-    op.execute("UPDATE listings SET listing_type = 'cottage' WHERE listing_type IS NULL")
-    op.execute("UPDATE listings SET status = 'available' WHERE status IS NULL")
-    op.execute("UPDATE users SET is_active = 1 WHERE is_active IS NULL")
+    # Use DO $$ to handle cases where tables may not exist yet
+    op.execute("""
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'listings') THEN
+                UPDATE listings SET has_gumdrop_garden = 0 WHERE has_gumdrop_garden IS NULL;
+                UPDATE listings SET listing_type = 'cottage' WHERE listing_type IS NULL;
+                UPDATE listings SET status = 'available' WHERE status IS NULL;
+            END IF;
+            IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users') THEN
+                UPDATE users SET is_active = 1 WHERE is_active IS NULL;
+            END IF;
+        END $$;
+    """)
 
-    # Add NOT NULL constraints
-    op.alter_column("listings", "has_gumdrop_garden", existing_type=sa.INTEGER(), nullable=False)
-    op.alter_column("listings", "listing_type", existing_type=sa.VARCHAR(length=50), nullable=False)
-    op.alter_column("listings", "status", existing_type=sa.VARCHAR(length=50), nullable=False)
-    op.alter_column("users", "is_active", existing_type=sa.INTEGER(), nullable=False)
+    # Add NOT NULL constraints (only if tables exist)
+    op.execute("""
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'listings') THEN
+                ALTER TABLE listings ALTER COLUMN has_gumdrop_garden SET NOT NULL;
+                ALTER TABLE listings ALTER COLUMN listing_type SET NOT NULL;
+                ALTER TABLE listings ALTER COLUMN status SET NOT NULL;
+            END IF;
+            IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users') THEN
+                ALTER TABLE users ALTER COLUMN is_active SET NOT NULL;
+            END IF;
+        END $$;
+    """)
     # ### end Alembic commands ###
 
 
