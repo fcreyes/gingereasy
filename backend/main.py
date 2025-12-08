@@ -69,7 +69,9 @@ async def upload_image(file: UploadFile = File(...)):
         )
 
     # Generate unique filename
-    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    ext = "jpg"
+    if file.filename and "." in file.filename:
+        ext = file.filename.split(".")[-1]
     filename = f"{uuid.uuid4()}.{ext}"
 
     # Read file content
@@ -166,7 +168,7 @@ def get_listings(
 
     # Convert has_gumdrop_garden from int to bool
     for listing in listings:
-        listing.has_gumdrop_garden = bool(listing.has_gumdrop_garden)
+        listing.has_gumdrop_garden = int(bool(listing.has_gumdrop_garden))
 
     return listings
 
@@ -176,7 +178,7 @@ def get_listing(listing_id: int, db: Session = Depends(get_db)):
     listing = db.query(Listing).filter(Listing.id == listing_id).first()
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
-    listing.has_gumdrop_garden = bool(listing.has_gumdrop_garden)
+    listing.has_gumdrop_garden = int(bool(listing.has_gumdrop_garden))
     return listing
 
 
@@ -205,7 +207,7 @@ def create_listing(
     db.add(db_listing)
     db.commit()
     db.refresh(db_listing)
-    db_listing.has_gumdrop_garden = bool(db_listing.has_gumdrop_garden)
+    db_listing.has_gumdrop_garden = int(bool(db_listing.has_gumdrop_garden))
     return db_listing
 
 
@@ -240,7 +242,7 @@ def update_listing(
 
     db.commit()
     db.refresh(db_listing)
-    db_listing.has_gumdrop_garden = bool(db_listing.has_gumdrop_garden)
+    db_listing.has_gumdrop_garden = int(bool(db_listing.has_gumdrop_garden))
     return db_listing
 
 

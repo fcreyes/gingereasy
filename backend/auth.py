@@ -74,6 +74,8 @@ async def get_current_user(
     except JWTError:
         return None
 
+    if token_data.username is None:
+        return None
     user = get_user_by_username(db, username=token_data.username)
     if user is None:
         return None
